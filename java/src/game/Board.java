@@ -29,7 +29,10 @@ public class Board {
             finishLine.add(new Square(colorCode));
         }
         generateSquares();
-        ensureCrossable();
+        while (!ensureCrossable()){
+            startingSquares.clear();
+            generateSquares();
+        }
         addSpecimens();
 
     }
@@ -61,7 +64,7 @@ public class Board {
         updateSpecimen();
     }
 
-    private void ensureCrossable(){
+    private boolean ensureCrossable(){
         for (int y = 0; y < BOARD_HEIGHT; y++){
             Point startPoint = new Point(0, y);
             HashSet<Point> currentSquares = new HashSet<Point>();
@@ -99,11 +102,7 @@ public class Board {
                 nextSquares = new HashSet<Point>();
             }
         }
-        if (startingSquares.size() < 10){
-            startingSquares.clear();
-            generateSquares();
-            ensureCrossable();
-        }
+        return startingSquares.size() < 10;
     }
 
     public static boolean atFinish(Point point){
