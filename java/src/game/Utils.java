@@ -1,8 +1,9 @@
 package game;
 
-import java.awt.Point;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Utils {
     public static List<Point> createArea(int sideLength){
@@ -28,8 +29,8 @@ public class Utils {
         return new Point(p1.x+p2.x,p1.y+p2.y);
     }
 
-    public static <T> T pickOne(List<T> list){
-        return list.get(Constants.random.nextInt(list.size()));
+    public static <T> T pickOne(List<T> list, Random random){
+        return list.get(random.nextInt(list.size()));
     }
 
     public static Point scale(Point point, int scalar){

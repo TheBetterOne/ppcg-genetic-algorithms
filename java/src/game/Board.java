@@ -2,9 +2,10 @@ package game;
 
 import game.traps.*;
 
-import java.awt.Point;
+import java.awt.*;
 import java.util.*;
 import java.util.List;
+
 import static game.Constants.*;
 
 public class Board {
@@ -14,23 +15,31 @@ public class Board {
     public final List<Point> startingSquares;
     private final Square outOfBoundsSquare;
     private final List<Square> finishLine;
+    private Random random;
 
+    Traps traps;
 
-
-    public Board(){
+    public Board(Random random){
+        this.random = random;
         specimens = new HashMap<Point, List<Specimen>>();
         nextSpecimens = new HashMap<Point, List<Specimen>>();
         squares = new ArrayList<List<Square>>();
         startingSquares = new ArrayList<Point>();
         outOfBoundsSquare = new Square(new ColorCode(-1));
         finishLine = new ArrayList<Square>();
-        Trap.initialize();
-        for (ColorCode colorCode: EmptyTrap.EMPTY_TRAPS.keySet()){
+        traps = new Traps(random);
+        for (ColorCode colorCode: traps.emptyTraps.EMPTY_TRAPS.keySet()){
             finishLine.add(new Square(colorCode));
         }
         generateSquares();
         while (!ensureCrossable()){
             startingSquares.clear();
+            squares.clear();
+            finishLine.clear();
+            traps = new Traps(random);
+            for (ColorCode colorCode: traps.emptyTraps.EMPTY_TRAPS.keySet()){
+                finishLine.add(new Square(colorCode));
+            }
             generateSquares();
         }
         addSpecimens();
@@ -59,7 +68,7 @@ public class Board {
             for (int j = 0; j < GENOME_LENGTH; j++){
                 builder.append(random.nextBoolean()?"1":"0");
             }
-            this.addSpecimen(new Specimen(builder.toString(), 0), Utils.pickOne(startingSquares));
+            this.addSpecimen(new Specimen(builder.toString(), 0), Utils.pickOne(startingSquares, random));
         }
         updateSpecimen();
     }
@@ -102,7 +111,7 @@ public class Board {
                 nextSquares = new HashSet<Point>();
             }
         }
-        return startingSquares.size() < 10;
+        return startingSquares.size() >= 10;
     }
 
     public static boolean atFinish(Point point){
@@ -117,14 +126,14 @@ public class Board {
         for (int y = 0; y < BOARD_HEIGHT; y++){
             List<Square> currentRow = new ArrayList<Square>();
             for (int x = 0; x < BOARD_WIDTH; x++){
-                ColorCode randomColorCode = Utils.pickOne(ColorCode.ALL_COLOR_CODES);
+                ColorCode randomColorCode = Utils.pickOne(traps.colorCodes.ALL_COLOR_CODES, random);
                 currentRow.add(new Square(randomColorCode));
             }
             squares.add(currentRow);
         }
         for (Point point: Utils.createArea(BOARD_WIDTH, BOARD_HEIGHT)){
             Square square = getSquare(point);
-            Trap trap = Trap.allTraps.get(square.colorCode);
+            Trap trap = traps.allTraps.get(square.colorCode);
             if (trap instanceof DeathTrap){
                 getSquare(Utils.add(((DeathTrap) trap).direction, point)).kills = true;
             } else if (trap instanceof TeleportationTrap){
@@ -139,7 +148,7 @@ public class Board {
         if (outOfBounds(point)){
             return outOfBoundsSquare;
         } if (atFinish(point)){
-            return Utils.pickOne(this.finishLine);
+            return Utils.pickOne(this.finishLine, random);
         }
         return squares.get(point.y).get(point.x);
     }
