@@ -12,7 +12,7 @@ then compile using the following command:
 
 Run a game with:
 
-    java game/Game
+    java game.Game
 
 ### Adding your player
 
