@@ -225,10 +225,14 @@ public class SingleGame implements Runnable{
                 }
             }
             Specimen currentParent = Utils.pickOne(selectedSpecimen, random);
+            selectedSpecimen.remove(currentParent);
             StringBuilder newGenome = new StringBuilder();
             for (int j = 0; j < GENOME_LENGTH; j++){
                 if (random.nextDouble() < GENOME_CROSSOVER_RATE){
-                    currentParent = Utils.pickOne(selectedSpecimen, random);
+                    Specimen newParent = Utils.pickOne(selectedSpecimen, random);
+                    selectedSpecimen.add(currentParent);
+                    selectedSpecimen.remove(newParent);
+                    currentParent = newParent;
                 }
                 int bit = currentParent.bitAt(j);
                 if (random.nextDouble() < GENOME_MUTATION_RATE){

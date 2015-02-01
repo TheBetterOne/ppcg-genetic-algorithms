@@ -26,7 +26,7 @@ public class Constants {
     public static final Color TELEPORT_COLOR = Color.BLUE;
     public static final Color WALL_COLOR = Color.GRAY;
 
-    public static final int NUMBER_OF_BOARDS = 10;
+    public static final int NUMBER_OF_BOARDS = 100;
 
     public static final int NUMBER_OF_TURNS = 10000;
 
@@ -45,13 +45,13 @@ public class Constants {
 
     public static final Random random = new Random(RANDOM_SEED);
 
-    public static final boolean SHOW_DISPLAY = true;
-    public static final boolean USE_SYSTEM_OUT = true;
-    public static final boolean LOG_EACH_GAME = false;
+    public static final boolean SHOW_DISPLAY = false;
+    public static final boolean USE_SYSTEM_OUT = false;
+    public static final boolean LOG_EACH_GAME = true;
     public static final String LOG_DIRECTORY_NAME = "logs";
-    public static final boolean SAVE_RESULTS = false;
+    public static final boolean SAVE_RESULTS = true;
     public static final String RESULTS_FILE_NAME = "results.txt";
 
-    public static final int NUMBER_OF_THREADS = 1;
+    public static final int NUMBER_OF_THREADS = 4;
 
 }
