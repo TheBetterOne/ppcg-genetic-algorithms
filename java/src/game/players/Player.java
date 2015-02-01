@@ -9,7 +9,7 @@ import java.util.Random;
 public abstract class Player {
     public Random random = Constants.random;//Players use this random.
 
-    public static Class<? extends Player> currentPlayer = RunningStar.class;
+    public static Class<? extends Player> currentPlayer = ColorScorePlayer.class;
 
     public abstract Point takeTurn(String genome, Map<Point, Integer> vision);
 
