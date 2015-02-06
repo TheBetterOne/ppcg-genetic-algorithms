@@ -45,53 +45,58 @@ public class SingleGame implements Runnable{
 
     @Override
     public void run(){
-        if (finished){
-            throw new IllegalStateException();
-        }
-        running = true;
-        long startTime = System.nanoTime();
-        Display display = null;
-        if (showDisplay){
-            display = new Display(board);
-        }
-        printf("Running board #"+(id+1)+"/"+NUMBER_OF_BOARDS + "\n");
-        for (int turnNumber = 0; turnNumber < NUMBER_OF_TURNS && !close; turnNumber++){
-            data.addPoints(takeTurn(board, turnNumber, player));
-            if (!lifeExists(board))
-                break;
-            breed(board, turnNumber, REPRODUCTION_RATE);
-            board.updateSpecimen();
+        System.out.println("Running board #" + (id + 1) + "/" + NUMBER_OF_BOARDS);
+        try {
+            if (finished) {
+                throw new IllegalStateException();
+            }
+            running = true;
+            long startTime = System.nanoTime();
+            Display display = null;
             if (showDisplay) {
-                display.repaint();
+                display = new Display(board);
             }
-            if (turnNumber % (NUMBER_OF_TURNS/100) == 0){
-                int population = 0;
-                for (Point point: board.getSpecimenLocations()){
-                    population += board.getSpecimen(point).size();
+            printf("Running board #" + (id + 1) + "/" + NUMBER_OF_BOARDS + System.lineSeparator());
+            for (int turnNumber = 0; turnNumber < NUMBER_OF_TURNS && !close; turnNumber++) {
+                data.addPoints(takeTurn(board, turnNumber, player));
+                if (!lifeExists(board))
+                    break;
+                breed(board, turnNumber, REPRODUCTION_RATE);
+                board.updateSpecimen();
+                if (showDisplay) {
+                    display.repaint();
                 }
-                data.addRow((System.nanoTime() - startTime) / 1000000000.0, population);
+                if (turnNumber % (NUMBER_OF_TURNS / 100) == 0) {
+                    int population = 0;
+                    for (Point point : board.getSpecimenLocations()) {
+                        population += board.getSpecimen(point).size();
+                    }
+                    data.addRow((System.nanoTime() - startTime) / 1000000000.0, population);
 
-                printf("%3d%% ", turnNumber * 100 / NUMBER_OF_TURNS);
-                printf("%5.4f sec ", (System.nanoTime() - startTime) / 1000000000.0);
-                printf("%10d ", data.getTotalPoints());
-                printf("Pop %5d ", population);
-                printf("Fit ");
-                printf("Avg %11.3f ", data.getTotalFitness() * 1.0 / population);
-                printf("Max %5d ", data.getMaxFitness());
-                println();
+                    printf("%3d%% ", turnNumber * 100 / NUMBER_OF_TURNS);
+                    printf("%5.4f sec ", (System.nanoTime() - startTime) / 1000000000.0);
+                    printf("%10d ", data.getTotalPoints());
+                    printf("Pop %5d ", population);
+                    printf("Fit ");
+                    printf("Avg %11.3f ", data.getTotalFitness() * 1.0 / population);
+                    printf("Max %5d ", data.getMaxFitness());
+                    println();
+                }
             }
-        }
-        for (Point coordinate: board.getSpecimenLocations()){
-            if (Board.atFinish(coordinate)){
-                data.addPoints(board.getSpecimen(coordinate).size());
+            for (Point coordinate : board.getSpecimenLocations()) {
+                if (Board.atFinish(coordinate)) {
+                    data.addPoints(board.getSpecimen(coordinate).size());
+                }
             }
+            println("Your bot got " + data.getTotalPoints() + " points");
+            if (showDisplay) {
+                display.dispose();
+            }
+            finished = true;
+            running = false;
+        } catch (Exception e){
+            e.printStackTrace();
         }
-        println("Your bot got " + data.getTotalPoints() + " points");
-        if (showDisplay){
-            display.dispose();
-        }
-        finished = true;
-        running = false;
     }
 
     public GameData getResults(){
@@ -196,17 +201,22 @@ public class SingleGame implements Runnable{
                 data.updateFitness(fitness);
             }
         }
+        List<Specimen> specimensToAdd = new ArrayList<>();
         for (int i = 0; i < numberOffspring; i++){
-            List<Specimen> selectedSpecimen = new ArrayList<Specimen>(NUM_PARENTS);
+            List<Specimen> selectedSpecimen = new ArrayList<>(NUM_PARENTS);
             long remainingTotal = data.getTotalFitness();
             for (int j = 0; j < NUM_PARENTS; j++){
                 long countDown;
                 try {
-                    countDown = random.nextLong()%remainingTotal;
+                    countDown = Math.abs(random.nextLong()) % remainingTotal;
+                    if (countDown < 0 || remainingTotal <= 0){
+                        throw new IllegalArgumentException();
+                    }
                 } catch (IllegalArgumentException e){
                     println(data.getTotalFitness() + "");
                     throw e;
                 }
+                boolean found = false;
                 for (Point point: board.getSpecimenLocations()){
                     for (Specimen specimen: board.getSpecimen(point)){
                         if (selectedSpecimen.contains(specimen))
@@ -216,13 +226,20 @@ public class SingleGame implements Runnable{
                         if (countDown <= 0){
                             selectedSpecimen.add(specimen);
                             remainingTotal -= score;
+                            found = true;
                             break;
                         }
                     }
-                    if (countDown <= 0){
+                    if (found){
                         break;
                     }
                 }
+                if (countDown > 0){
+                    throw new IllegalArgumentException();
+                }
+            }
+            if (selectedSpecimen.size() != NUM_PARENTS){
+                throw new IllegalStateException();
             }
             Specimen currentParent = Utils.pickOne(selectedSpecimen, random);
             selectedSpecimen.remove(currentParent);
@@ -240,7 +257,8 @@ public class SingleGame implements Runnable{
                 }
                 newGenome.append(bit);
             }
-            board.addSpecimen(new Specimen(newGenome.toString(), turnNumber), Utils.pickOne(board.startingSquares, random));
+            specimensToAdd.add(new Specimen(newGenome.toString(), turnNumber));
         }
+        specimensToAdd.forEach(a -> board.addSpecimen(a, Utils.pickOne(board.startingSquares, random)));
     }
 }
